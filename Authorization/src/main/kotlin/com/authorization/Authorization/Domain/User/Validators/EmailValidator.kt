@@ -6,8 +6,8 @@ import com.authorization.Authorization.Domain.User.Exceptions.NickNameException
 class EmailValidator {
     companion object {
         fun validateEmail(email: String): String {
-            if (email.length < 8 || email.length > 64) {
-                throw NickNameException("Your email should have at least 8 symbols and no more than 64 symbols")
+            if (email.length > 64) {
+                throw NickNameException("Your email should have no more than 64 symbols")
             }
 
             val separatedParts = email.split("@")

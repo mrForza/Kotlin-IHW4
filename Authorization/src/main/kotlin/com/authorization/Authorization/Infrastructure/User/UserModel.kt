@@ -11,12 +11,14 @@ import java.util.*
 @Entity
 @Table(name = "user")
 class UserModel (
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Int?,
-    @Column(unique = true) val nickname: String,
-    @Column(unique = true) val email: String,
-    var password: String,
-    val name: String,
-    val surname: String,
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int?,
+    @Column(unique = true, length = 64) val nickname: String,
+    @Column(unique = true, length = 64) val email: String,
+    @Column(length = 64) var password: String,
+    @Column(length = 32) val name: String,
+    @Column(length = 32) val surname: String,
     @NotNull val age: Int,
     @NotNull val created: Date,
     @NotNull var role: String = UserRole.USER.toString()

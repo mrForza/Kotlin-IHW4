@@ -1,8 +1,10 @@
 package com.authorization.Authorization.Application.User
 
 import com.authorization.Authorization.Application.User.DTOs.UserDTO
+import com.authorization.Authorization.Infrastructure.Jwt.SessionRepository
 import com.authorization.Authorization.Infrastructure.User.UserRepository
 import com.authorization.Authorization.Infrastructure.User.UserRole
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -10,14 +12,17 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class UserService(private val userRepository: UserRepository) : UserDetailsService {
+class UserService(
+    private val userRepository: UserRepository,
+    private val sessionRepository: SessionRepository
+) : UserDetailsService {
     override fun loadUserByUsername(username: String?): UserDetails {
-        val user = userRepository.findUserByNickName(username)
+        val user = userRepository.findUserByNickName(username) ?: throw Exception("No user with that credentials!")
 
         return User(
-            user?.email,
-            user?.password,
-            Collections.singleton(user?.role?.let { UserRole.valueOf(it) })
+            user.email,
+            user.password,
+            Collections.singleton(user.role.let { UserRole.valueOf(it) })
         )
     }
 
@@ -31,7 +36,12 @@ class UserService(private val userRepository: UserRepository) : UserDetailsServi
         )
     }
 
-    fun getUsers(): MutableList<UserDTO> {
+    fun getUsers(request: HttpServletRequest): MutableList<UserDTO> {
+        val jwtToken = request.getHeader("Authorization").split(" ")[1]
+        if (sessionRepository.findSessionModelByToken(jwtToken) == null) {
+            throw Exception("")
+        }
+
         val users =  userRepository.findAll().toMutableList()
         val userDtoS: MutableList<UserDTO> = mutableListOf()
 
@@ -47,7 +57,12 @@ class UserService(private val userRepository: UserRepository) : UserDetailsServi
         return userDtoS
     }
 
-    fun getUserById(id: Int): UserDTO {
+    fun getUserById(id: Int, request: HttpServletRequest): UserDTO {
+        val jwtToken = request.getHeader("Authorization").split(" ")[1]
+        if (sessionRepository.findSessionModelByToken(jwtToken) == null) {
+            throw Exception("")
+        }
+
         val optionalUser = userRepository.findById(id)
         if (optionalUser.isEmpty) {
             throw Exception("No user with this id!")

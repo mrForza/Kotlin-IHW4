@@ -63,7 +63,11 @@ class AuthorizationController(
     }
 
     @GetMapping("/logout/")
-    fun logout(): ResponseEntity<Any> {
-        return ResponseEntity<Any>("logout!", HttpStatusCode.valueOf(200))
+    fun logout(request: HttpServletRequest): ResponseEntity<Any> {
+        return try  {
+            ResponseEntity<Any>(authorizationService.logout(request), HttpStatusCode.valueOf(200))
+        } catch (exception: Exception) {
+            ResponseEntity<Any>(exception.message, HttpStatusCode.valueOf(400))
+        }
     }
 }

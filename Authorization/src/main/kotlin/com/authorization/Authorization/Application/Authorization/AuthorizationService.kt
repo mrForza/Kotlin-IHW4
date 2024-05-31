@@ -1,7 +1,8 @@
 package com.authorization.Authorization.Application.Authorization
 
 import com.authorization.Authorization.Application.Authorization.DTOs.*
-import com.authorization.Authorization.Domain.User.UserEntity
+import com.authorization.Authorization.Infrastructure.Jwt.SessionModel
+import com.authorization.Authorization.Infrastructure.Jwt.SessionRepository
 import com.authorization.Authorization.Infrastructure.User.UserModel
 import com.authorization.Authorization.Infrastructure.User.UserRepository
 import com.authorization.Authorization.Infrastructure.User.UserRole
@@ -10,11 +11,13 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 import java.util.*
 
 @Service
 class AuthorizationService(
     private val userRepo: UserRepository,
+    private val sessionRepo: SessionRepository,
     private val authenticationManager: AuthenticationManager,
     private val jwtService: JwtService,
     private val passwordEncoder: PasswordEncoder
@@ -61,16 +64,26 @@ class AuthorizationService(
         )
 
         val user = userRepo.findUserByEmail(data.name) ?: throw Exception("No user found with this email!")
-        return LoginResponseDTO(
-            jwtService.generateToken(user)
-        )
+        val jwtToken = jwtService.generateToken(user)
+
+        sessionRepo.save(SessionModel(
+            id = null,
+            user = user,
+            token = jwtToken,
+            expires = Timestamp(jwtService.extractAllClaims(jwtToken).expiration.time)
+        ))
+        return LoginResponseDTO(jwtToken)
     }
 
     fun getProfile(request: HttpServletRequest): ProfileResponseDTO {
         val jwtToken = request.getHeader("Authorization").split(" ")[1]
+        if (sessionRepo.findSessionModelByToken(jwtToken) == null) {
+            throw Exception("")
+        }
+
         val claims = jwtService.extractAllClaims(jwtToken)
 
-        val user= userRepo.findUserByEmail(claims.subject) ?: throw Exception("No user with that credentials!")
+        val user = userRepo.findUserByEmail(claims.subject) ?: throw Exception("No user with that credentials!")
         return ProfileResponseDTO(
             nickname = user.nickname,
             email = user.email,
@@ -78,5 +91,19 @@ class AuthorizationService(
             surname = user.surname,
             age = user.age
         )
+    }
+
+    fun logout(request: HttpServletRequest) : LogoutResponseDTO {
+        val jwtToken = request.getHeader("Authorization").split(" ")[1]
+        if (sessionRepo.findSessionModelByToken(jwtToken) == null) {
+            throw Exception("")
+        }
+
+        val user = userRepo.findUserByEmail(jwtService.extractAllClaims(jwtToken).subject)
+            ?: throw Exception("No user with that credentials!")
+
+        val session = user.id?.let { sessionRepo.findSessionModelByUserId(it) }
+        session?.id?.let { sessionRepo.deleteById(it) }
+        return LogoutResponseDTO()
     }
 }
