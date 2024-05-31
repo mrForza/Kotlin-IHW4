@@ -3,14 +3,12 @@ package com.authorization.Authorization.Presentation
 import com.authorization.Authorization.Application.Authorization.AuthorizationException
 import com.authorization.Authorization.Application.Authorization.AuthorizationService
 import com.authorization.Authorization.Application.Authorization.DTOs.LoginRequestDTO
-import com.authorization.Authorization.Application.Authorization.DTOs.LoginResponseDTO
 import com.authorization.Authorization.Application.Authorization.DTOs.RegistrationRequestDTO
-import com.authorization.Authorization.Application.Authorization.DTOs.RegistrationResponseDTO
 import com.authorization.Authorization.Application.User.UserService
 import com.authorization.Authorization.Domain.User.Exceptions.Base.BaseUserException
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -21,22 +19,34 @@ class AuthorizationController(
     private val authorizationService: AuthorizationService,
     private val userService: UserService
 ) {
-
     @PostMapping("/register/")
     fun register(@RequestBody registrationRequestDTO: RegistrationRequestDTO): ResponseEntity<Any> {
-        var jwtToken = ""
-        try {
+        return try {
             authorizationService.checkNickNameAndEmailExistence(
                 registrationRequestDTO.nickName,
                 registrationRequestDTO.email
             )
-            jwtToken = authorizationService.register(registrationRequestDTO).token
+            ResponseEntity<Any>(
+                authorizationService.register(registrationRequestDTO).message,
+                HttpStatusCode.valueOf(201)
+            )
         } catch (exception: BaseUserException) {
             return ResponseEntity<Any>(exception.message, HttpStatusCode.valueOf(400))
         } catch (exception: AuthorizationException) {
             return ResponseEntity<Any>(exception.message, HttpStatusCode.valueOf(400))
         }
-        return ResponseEntity<Any>(RegistrationResponseDTO(jwtToken), HttpStatusCode.valueOf(201))
+    }
+
+    @GetMapping("/profile/")
+    fun profile(request: HttpServletRequest): ResponseEntity<Any> {
+        return try {
+            ResponseEntity<Any>(
+                authorizationService.getProfile(request),
+                HttpStatusCode.valueOf(200)
+            )
+        } catch (exception: Exception) {
+            return ResponseEntity<Any>(exception.message, HttpStatusCode.valueOf(400))
+        }
     }
 
     @PostMapping("/login/")

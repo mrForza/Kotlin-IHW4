@@ -1,8 +1,9 @@
 package com.authorization.Authorization.Application.Authorization.DTOs
 
-data class RegistrationResponseDTO(
-    val id: Int,
+data class ProfileResponseDTO(
+    val nickname: String,
+    val email: String,
     val name: String,
     val surname: String,
-    val message: String = "You have been successfully registered!"
+    val age: Int
 )

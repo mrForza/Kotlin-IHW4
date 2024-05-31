@@ -4,7 +4,7 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
-import com.authorization.Authorization.Infrastructure.UserModel
+import com.authorization.Authorization.Infrastructure.User.UserModel
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import java.util.*
@@ -32,7 +32,7 @@ class JwtService {
 
     fun generateToken(user: UserModel): String {
         return Jwts
-            .builder().subject(user.getEmail())
+            .builder().subject(user.email)
             .issuedAt(Date(System.currentTimeMillis()))
             .expiration(Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))
             .signWith(signingKey())

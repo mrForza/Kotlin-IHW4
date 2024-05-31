@@ -1,4 +1,4 @@
-package com.authorization.Authorization.Infrastructure
+package com.authorization.Authorization.Infrastructure.User
 
 import org.springframework.security.core.GrantedAuthority
 
