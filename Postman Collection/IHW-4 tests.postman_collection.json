@@ -1,0 +1,183 @@
+{
+	"info": {
+		"_postman_id": "d617c497-8817-4c71-b95d-0d2569b2bd30",
+		"name": "IHW-4 tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "28233508"
+	},
+	"item": [
+		{
+			"name": "OrderService Requests",
+			"item": [
+				{
+					"name": "get orders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:90/orders/"
+					},
+					"response": []
+				},
+				{
+					"name": "create order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"main 1\",\r\n    \"fromStationId\": 2,\r\n    \"toStationId\": 3\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:90/orders/create/"
+					},
+					"response": []
+				},
+				{
+					"name": "get order by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:90/orders/6/"
+					},
+					"response": []
+				},
+				{
+					"name": "get stations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:90/stations/"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AuthService Requests",
+			"item": [
+				{
+					"name": "registration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Philip2\",\r\n    \"surname\": \"Gallagher2\",\r\n    \"nickName\": \"FFil2\",\r\n    \"email\": \"testmail2@bk.ru\",\r\n    \"password\": \"somePassw000rd!\",\r\n    \"age\": 18\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:80/register/"
+					},
+					"response": []
+				},
+				{
+					"name": "authentication",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"testmail2@bk.ru\",\r\n    \"password\": \"somePassw000rd!\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:80/login/"
+					},
+					"response": []
+				},
+				{
+					"name": "get users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/users/"
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:80/logout/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "80",
+							"path": [
+								"logout",
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "check authorization",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/check/"
+					},
+					"response": []
+				},
+				{
+					"name": "get my profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/profile/"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZXN0bWFpbDJAYmsucnUiLCJpYXQiOjE3MTc5NTM2MzEsImV4cCI6MTcxODA0MDAzMX0.9jtxzbyNyt1UN2WHyedLAXbHQdAtAv1G1jVMEO6nLWVycgH2VFoyRDRXud198_b9"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
