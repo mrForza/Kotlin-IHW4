@@ -17,27 +17,31 @@ class JwtFilter(private val jwtService: JwtService, private val userService: Use
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val authHeader = request.getHeader("Authorization")
+        try {
+            val authHeader = request.getHeader("Authorization")
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response)
-            return
-        }
-
-        val token = authHeader.substring(7)
-        val claims = jwtService.extractAllClaims(token)
-
-        if (claims.subject != null && SecurityContextHolder.getContext().authentication == null) {
-            val user = userService.loadUserCredentialsByEmail(claims.subject)
-
-            if (jwtService.isValid(token, user)) {
-                val authToken = UsernamePasswordAuthenticationToken(user, null, user.authorities)
-                authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-
-                SecurityContextHolder.getContext().authentication = authToken
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response)
+                return
             }
-        }
 
-        filterChain.doFilter(request, response)
+            val token = authHeader.substring(7)
+            val claims = jwtService.extractAllClaims(token)
+
+            if (claims.subject != null && SecurityContextHolder.getContext().authentication == null) {
+                val user = userService.loadUserCredentialsByEmail(claims.subject)
+
+                if (jwtService.isValid(token, user)) {
+                    val authToken = UsernamePasswordAuthenticationToken(user, null, user.authorities)
+                    authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
+
+                    SecurityContextHolder.getContext().authentication = authToken
+                }
+            }
+
+            filterChain.doFilter(request, response)
+        } catch (exception: Exception) {
+            println(exception.message)
+        }
     }
 }

@@ -11,5 +11,9 @@ import org.springframework.context.annotation.Configuration
 class OrdersApplication
 
 fun main(args: Array<String>) {
-	runApplication<OrdersApplication>(*args)
+	try {
+		runApplication<OrdersApplication>(*args)
+	} catch (exception: Exception) {
+		println("Something went wrong!")
+	}
 }

@@ -1,5 +1,7 @@
 package com.authorization.Authorization.Application.User
 
+import com.authorization.Authorization.Application.Authorization.Exceptions.BadSessionException
+import com.authorization.Authorization.Application.Authorization.Exceptions.NoUserWithGivenCredentialsException
 import com.authorization.Authorization.Application.User.DTOs.UserDTO
 import com.authorization.Authorization.Infrastructure.Jwt.SessionRepository
 import com.authorization.Authorization.Infrastructure.User.UserRepository
@@ -17,7 +19,8 @@ class UserService(
     private val sessionRepository: SessionRepository
 ) : UserDetailsService {
     override fun loadUserByUsername(username: String?): UserDetails {
-        val user = userRepository.findUserByNickName(username) ?: throw Exception("No user with that credentials!")
+        val user = userRepository.findUserByNickName(username)
+            ?: throw NoUserWithGivenCredentialsException("No user with that credentials!")
 
         return User(
             user.email,
@@ -28,18 +31,19 @@ class UserService(
 
     fun loadUserCredentialsByEmail(email: String): UserDetails {
         val user = userRepository.findUserByEmail(email)
+            ?: throw NoUserWithGivenCredentialsException("No user with that credentials!")
 
         return User(
-            user?.email,
-            user?.password,
-            Collections.singleton(user?.role?.let { UserRole.valueOf(it) })
+            user.email,
+            user.password,
+            Collections.singleton(user.role.let { UserRole.valueOf(it) })
         )
     }
 
     fun getUsers(request: HttpServletRequest): MutableList<UserDTO> {
         val jwtToken = request.getHeader("Authorization").split(" ")[1]
         if (sessionRepository.findSessionModelByToken(jwtToken) == null) {
-            throw Exception("")
+            throw BadSessionException("Your session has expired or you have transferred an invalid token")
         }
 
         val users =  userRepository.findAll().toMutableList()
@@ -60,7 +64,7 @@ class UserService(
     fun getUserById(id: Int, request: HttpServletRequest): UserDTO {
         val jwtToken = request.getHeader("Authorization").split(" ")[1]
         if (sessionRepository.findSessionModelByToken(jwtToken) == null) {
-            throw Exception("")
+            throw BadSessionException("Your session has expired or you have transferred an invalid token")
         }
 
         val optionalUser = userRepository.findById(id)

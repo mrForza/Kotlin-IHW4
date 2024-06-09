@@ -1,5 +1,6 @@
 package com.authorization.Authorization.Presentation
 
+import com.authorization.Authorization.Application.Authorization.Exceptions.Base.BaseAuthorizationException
 import com.authorization.Authorization.Application.User.UserService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatusCode
@@ -15,7 +16,15 @@ class UserController(private val userService: UserService) {
         return try {
             ResponseEntity<Any>(userService.getUsers(request), HttpStatusCode.valueOf(200))
         } catch (exception: Exception) {
-            return ResponseEntity<Any>(HttpStatusCode.valueOf(401))
+            when (exception) {
+                is BaseAuthorizationException -> {
+                    return ResponseEntity<Any>(exception.message, HttpStatusCode.valueOf(400))
+                }
+                else -> return ResponseEntity<Any>(
+                    "Something went wrong! Please, check your authorization credentials",
+                    HttpStatusCode.valueOf(400)
+                )
+            }
         }
     }
 
@@ -24,7 +33,15 @@ class UserController(private val userService: UserService) {
         return try {
             ResponseEntity<Any>(userService.getUserById(id, request), HttpStatusCode.valueOf(200))
         } catch (exception: Exception) {
-            return ResponseEntity<Any>(exception.message, HttpStatusCode.valueOf(400))
+            when (exception) {
+                is BaseAuthorizationException -> {
+                    return ResponseEntity<Any>(exception.message, HttpStatusCode.valueOf(400))
+                }
+                else -> return ResponseEntity<Any>(
+                    "Something went wrong! Please, check your authorization credentials",
+                    HttpStatusCode.valueOf(400)
+                )
+            }
         }
     }
 }

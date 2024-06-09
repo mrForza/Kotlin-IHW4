@@ -26,9 +26,9 @@ class SecurityConfiguration(
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http.csrf { it.disable() }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/login/**").permitAll()
-                    .requestMatchers("/register/**").permitAll()
-                    .anyRequest().authenticated()
+                auth.requestMatchers("/users/**").authenticated()
+                    .requestMatchers("/logout/").authenticated()
+                    .anyRequest().permitAll()
             }
             .exceptionHandling {e ->
                 e.accessDeniedHandler(customAccessDeniedHandler)
@@ -39,6 +39,8 @@ class SecurityConfiguration(
 
         return http.build()
     }
+
+
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {

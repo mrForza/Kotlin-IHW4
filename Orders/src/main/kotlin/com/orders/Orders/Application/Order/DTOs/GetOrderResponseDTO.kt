@@ -4,5 +4,6 @@ data class GetOrderResponseDTO(
     val id: Int,
     val name: String,
     val fromStationId: Int,
-    val toStationId: Int
+    val toStationId: Int,
+    val status: String
 )

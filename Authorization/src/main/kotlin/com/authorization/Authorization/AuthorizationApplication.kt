@@ -9,7 +9,10 @@ import org.springframework.context.annotation.Configuration
 @EnableAutoConfiguration
 @ComponentScan
 class AuthorizationApplication
-
 fun main(args: Array<String>) {
-	runApplication<AuthorizationApplication>(*args)
+	try {
+		runApplication<AuthorizationApplication>(*args)
+	} catch (exception: Exception) {
+		println("Something went wrong!")
+	}
 }

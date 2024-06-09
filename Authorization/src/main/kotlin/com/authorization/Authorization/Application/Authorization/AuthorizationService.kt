@@ -1,6 +1,8 @@
 package com.authorization.Authorization.Application.Authorization
 
 import com.authorization.Authorization.Application.Authorization.DTOs.*
+import com.authorization.Authorization.Application.Authorization.Exceptions.BadSessionException
+import com.authorization.Authorization.Application.Authorization.Exceptions.NoUserWithGivenCredentialsException
 import com.authorization.Authorization.Infrastructure.Jwt.SessionModel
 import com.authorization.Authorization.Infrastructure.Jwt.SessionRepository
 import com.authorization.Authorization.Infrastructure.User.UserModel
@@ -24,11 +26,11 @@ class AuthorizationService(
 ) {
     fun checkNickNameAndEmailExistence(nickName: String, email: String) {
         if (userRepo.findUserByNickName(nickName) != null) {
-            throw AuthorizationException("The user with this nickname already exists")
+            throw NoUserWithGivenCredentialsException("The user with this nickname already exists")
         }
 
         if (userRepo.findUserByEmail(email) != null) {
-            throw AuthorizationException("The user with this email already exists")
+            throw NoUserWithGivenCredentialsException("The user with this email already exists")
         }
     }
 
@@ -56,6 +58,8 @@ class AuthorizationService(
     }
 
     fun authenticate(loginDTO : LoginRequestDTO): LoginResponseDTO {
+        checkTokens()
+
         val data = authenticationManager.authenticate(
             UsernamePasswordAuthenticationToken(
                 userRepo.findUserByEmail(loginDTO.email)?.nickname,
@@ -63,7 +67,10 @@ class AuthorizationService(
             )
         )
 
-        val user = userRepo.findUserByEmail(data.name) ?: throw Exception("No user found with this email!")
+        val user = userRepo.findUserByEmail(data.name)
+            ?: throw NoUserWithGivenCredentialsException("No user found with this email!")
+        val session = user.id?.let { sessionRepo.findSessionModelByUserId(it) }
+        session?.id?.let { sessionRepo.deleteById(it) }
         val jwtToken = jwtService.generateToken(user)
 
         sessionRepo.save(SessionModel(
@@ -78,12 +85,13 @@ class AuthorizationService(
     fun getProfile(request: HttpServletRequest): ProfileResponseDTO {
         val jwtToken = request.getHeader("Authorization").split(" ")[1]
         if (sessionRepo.findSessionModelByToken(jwtToken) == null) {
-            throw Exception("")
+            throw BadSessionException("Your session has expired or you have transferred an invalid token")
         }
 
         val claims = jwtService.extractAllClaims(jwtToken)
 
-        val user = userRepo.findUserByEmail(claims.subject) ?: throw Exception("No user with that credentials!")
+        val user = userRepo.findUserByEmail(claims.subject)
+            ?: throw NoUserWithGivenCredentialsException("No user with that credentials!")
         return ProfileResponseDTO(
             nickname = user.nickname,
             email = user.email,
@@ -96,14 +104,36 @@ class AuthorizationService(
     fun logout(request: HttpServletRequest) : LogoutResponseDTO {
         val jwtToken = request.getHeader("Authorization").split(" ")[1]
         if (sessionRepo.findSessionModelByToken(jwtToken) == null) {
-            throw Exception("")
+            throw BadSessionException("Your session has expired or you have transferred an invalid token")
         }
 
         val user = userRepo.findUserByEmail(jwtService.extractAllClaims(jwtToken).subject)
-            ?: throw Exception("No user with that credentials!")
+            ?: throw NoUserWithGivenCredentialsException("No user with that credentials!")
 
         val session = user.id?.let { sessionRepo.findSessionModelByUserId(it) }
         session?.id?.let { sessionRepo.deleteById(it) }
         return LogoutResponseDTO()
+    }
+
+    fun checkUserCredentials(request: HttpServletRequest): CheckUserDTO {
+        val jwtToken = request.getHeader("Authorization").split(" ")[1]
+        if (sessionRepo.findSessionModelByToken(jwtToken) == null) {
+            return CheckUserDTO(false, null)
+        }
+
+        val claims = jwtService.extractAllClaims(jwtToken)
+
+        val user = userRepo.findUserByEmail(claims.subject) ?: return CheckUserDTO(false, null)
+        return CheckUserDTO(true, user.id)
+    }
+
+    fun checkTokens() {
+        val sessionModels = sessionRepo.findAll()
+
+        for (session in sessionModels) {
+            if (Date(session.expires.time).compareTo(Date()) == -1) {
+                session.id?.let { sessionRepo.deleteById(it) }
+            }
+        }
     }
 }

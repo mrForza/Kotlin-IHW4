@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  authorization_service:
+    container_name: authorization
+    build: ./Authorization/
+    ports:
+      - 80:8080
+    networks:
+      - apinet
+
+  order_service:
+    container_name: order
+    build: ./Orders/
+    depends_on:
+      - authorization_service
+    ports:
+      - 90:8090
+    networks:
+      - apinet
+
+networks:
+  apinet:
+    driver: bridge
